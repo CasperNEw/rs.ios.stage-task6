@@ -28,26 +28,48 @@ extension Deck {
 
     init(with type: DeckType) {
         self.type = type
+		switch type {
+		case .deck36:
+			cards = createDeck(suits: Suit.allCases, values: Value.allCases)
+		}
     }
 
     public func createDeck(suits:[Suit], values:[Value]) -> [Card] {
-        []
+
+		let values = values.sorted { $0.rawValue < $1.rawValue }
+		return suits
+			.sorted(by: { $0.rawValue < $1.rawValue })
+			.flatMap { suit in
+				values.map { Card(suit: suit, value: $0) }
+			}
+	}
+
+	public mutating func shuffle() {
+		cards.shuffle()
     }
 
-    public func shuffle() {
-
+	public mutating func defineTrump() {
+		trump = cards.last?.suit
+		cards.enumerated().forEach {
+			cards[$0.offset].isTrump = $0.element.suit == trump
+		}
     }
 
-    public func defineTrump() {
+	public mutating func initialCardsDealForPlayers(players: [Player]) {
+		players.forEach {
+			var suitableCards: [Card?] = []
+			for _ in 1...6 {
+				suitableCards.append(cards.popLast())
+			}
+			$0.hand = suitableCards.compactMap { $0 }
+		}
+	}
 
-    }
-
-    public func initialCardsDealForPlayers(players: [Player]) {
-
-    }
-
-    public func setTrumpCards(for suit:Suit) {
-
+	public mutating func setTrumpCards(for suit:Suit) {
+		trump = suit
+		cards.enumerated().forEach {
+			cards[$0.offset].isTrump = $0.element.suit == trump
+		}
     }
 }
 
